@@ -4,11 +4,15 @@ import pandas as pd
 import joblib
 
 # === Load model and scaler ===
-model_path = r"C:\Users\Manoj\OneDrive\Desktop\DAPF\model\lasso_model.pkl"
-scaler_path = r"C:\Users\Manoj\OneDrive\Desktop\DAPF\model\scaler.pkl"
+#model_path = r"C:\Users\Manoj\OneDrive\Desktop\DAPF\model\lasso_model.pkl"
+#scaler_path = r"C:\Users\Manoj\OneDrive\Desktop\DAPF\model\scaler.pkl"
 
-model = joblib.load(model_path)
-scaler = joblib.load(scaler_path)
+#model = joblib.load(model_path)
+#scaler = joblib.load(scaler_path)
+
+model_path = "lasso_model.pkl"
+scaler_path = "scaler.pkl"
+
 
 st.title("🐐 Goat Farm Net Worth Estimator")
 st.markdown("Provide just **three key inputs**. We’ll do the rest internally.")
