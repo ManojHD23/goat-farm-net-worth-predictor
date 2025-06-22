@@ -1,59 +1,62 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 import joblib
 
-# === Load model and scaler ===
-#model_path = r"C:\Users\Manoj\OneDrive\Desktop\DAPF\model\lasso_model.pkl"
-#scaler_path = r"C:\Users\Manoj\OneDrive\Desktop\DAPF\model\scaler.pkl"
+# ==== Load Model and Scaler ====
+model = joblib.load("lasso_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
-#model = joblib.load(model_path)
-#scaler = joblib.load(scaler_path)
+# ==== Streamlit Page Setup ====
+st.set_page_config(page_title="🐐 Goat Farm Net Worth Predictor", layout="centered")
+st.title("🐐 Goat Farm Net Worth Predictor")
+st.markdown("### Enter only 3 values to estimate your goat farm's net worth.")
 
-model_path = "lasso_model.pkl"
-scaler_path = "scaler.pkl"
+# ==== Input Form ====
+with st.form("prediction_form"):
+    invested = st.number_input("💰 Invested Amount (INR)", step=1, format="%d")
+    early_weight = st.number_input("⚖️ Early Weight (kg)", step=1, format="%d")
+    weight_gained = st.number_input("💪 Weight Gained (kg)", step=1, format="%d")
+    
+    submitted = st.form_submit_button("🚀 Predict Net Worth")
 
+# ==== Prediction Logic ====
+if submitted:
+    # Feature columns used during training
+    feature_columns = [
+        'Initial_Strenght', 'New_Born', 'Death', 'Sold', 'New_Purchase',
+        'Current_Strength', 'Early_Weight', 'Weight_Gained', 'Goat_Sell_income_only', 'invested'
+    ]
 
-st.title("🐐 Goat Farm Net Worth Estimator")
-st.markdown("Provide just **three key inputs**. We’ll do the rest internally.")
+    # Default values for all other features (fixed)
+    default_values = {
+        'Initial_Strenght': 3,
+        'New_Born': 1,
+        'Death': 0,
+        'Sold': 1,
+        'New_Purchase': 1,
+        'Current_Strength': 4,
+        'Goat_Sell_income_only': 20000
+    }
 
-# === Collect Essential Inputs ===
-invested = st.number_input("💰 Invested Amount (INR)", value=15000)
-weight_gained = st.number_input("⚖️ Weight Gained (kg)", value=200)
-early_weight = st.number_input("🐐 Early Weight (kg)", value=20)
+    # Inject client input into default dict
+    default_values['Early_Weight'] = int(early_weight)
+    default_values['Weight_Gained'] = int(weight_gained)
+    default_values['invested'] = int(invested)
 
-# === Build Full Input with Defaults ===
-# Load default values from training data (for simplicity, we hardcode them here)
-default_values = {
-    'Initial_Strenght': 3,
-    'New_Born': 1,
-    'Death': 0,
-    'Sold': 1,
-    'New_Purchase': 1,
-    'Current_Strength': 4,
-    'Goat_Sell_income_only': 20000
-}
+    # Create input DataFrame with correct order
+    input_df = pd.DataFrame([[default_values[col] for col in feature_columns]], columns=feature_columns)
 
-# Construct the full feature input
-input_dict = {
-    'Initial_Strenght': default_values['Initial_Strenght'],
-    'New_Born': default_values['New_Born'],
-    'Death': default_values['Death'],
-    'Sold': default_values['Sold'],
-    'New_Purchase': default_values['New_Purchase'],
-    'Current_Strength': default_values['Current_Strength'],
-    'Early_Weight': early_weight,
-    'Weight_Gained': weight_gained,
-    'Goat_Sell_income_only': default_values['Goat_Sell_income_only'],
-    'invested': invested
-}
-
-input_df = pd.DataFrame([input_dict])
-
-# === Predict ===
-if st.button("Predict Net Worth"):
+    # Transform and predict
     X_scaled = scaler.transform(input_df)
-    prediction = model.predict(X_scaled)[0]
-    profit = prediction - invested
-    st.success(f"💰 Predicted Net Worth: ₹ {prediction:,.2f}")
-    st.info(f"📈 Estimated Profit: ₹ {profit:,.2f}")
+    predicted_net_worth = model.predict(X_scaled)[0]
+    predicted_net_worth = round(predicted_net_worth, 2)
+
+    # ROI
+    profit = round(predicted_net_worth - default_values['invested'], 2)
+
+    # ==== Display Output ====
+    st.subheader("📈 Prediction Result")
+    st.success(f"💵 Predicted Net Worth: ₹ {predicted_net_worth:,.2f}")
+    st.info(f"📊 Estimated Profit: ₹ {profit:,.2f}")
+    if profit > 0:
+        st.balloons()
